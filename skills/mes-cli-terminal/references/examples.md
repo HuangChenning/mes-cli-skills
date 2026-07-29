@@ -171,6 +171,22 @@
 
 > ⚠️ 场景：当用户需要在回复服务请求或保存文档时嵌入本地图片，请先使用 `oss upload image` 获取 URL，再将 URL 填入正文。目前**仅支持图片**，不支持其他文件。
 
+### 客户附件（customer attachment）
+
+- "列出客户 861 的全部附件"
+  1. 先查公司 ID（如果用户没给）：
+     `mes util search-company "云和恩墨虚拟客户" -o json` → 取 `companies[].ID`
+  2. 拉取全量附件：
+     `mes customer attachment list --company-id 861 --all`
+- "下载客户 861 的某个附件到 /tmp"
+  `mes customer attachment download --company-id 861 --file-id 7368 --output-dir /tmp/cust-861`
+- "把客户 861 的全部附件打包下载"
+  `mes customer attachment batch --company-id 861 --zip-output /tmp/cust-861.zip`
+- "上传一份 PDF 到客户 861"
+  `mes customer attachment upload --company-id 861 --file /path/to/report.pdf`
+
+> ⚠️ `--company-id` 在每个子命令上都是**必填**，CLI 不会从 `/user/detail` 推断，避免 token 持有者批量下载任意客户。原 `view` 子命令已移除，等价预览使用 `list --all`。
+
 ### 发现链 (Discovery Chain): 从公司名找实施计划
 
 - "找到 '云和恩墨虚拟客户' 公司的合同子项"

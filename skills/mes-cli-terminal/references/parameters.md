@@ -15,6 +15,8 @@
   - `list`, `view`, `save`, `delete`, `assign-reviewer`, `set-level`, `set-type`, `review-count`
 - `mes contract`
   - `list`, `list-items`, `view`
+- `mes customer`
+  - `attachment list`, `attachment upload`, `attachment download`, `attachment batch`
 - `mes dashboard`
   - `base`
   - `contract`
@@ -448,6 +450,23 @@
 - `util search-company <keyword>`
   - 通过公司名称关键字搜索公司，返回 companyID、companyName，支持 `-o json` 输出
 
+### `mes customer attachment`
+
+> ⚠️ 所有子命令都要求显式传入 `--company-id`（不接受 `--company-id 0`）；CLI 不会从 `/user/detail` 推断。必须先用 `util search-company` 查到 ID 再调用。
+
+- `attachment list --company-id <id>`
+  - 列出客户维度的附件。`--all` 取所有页（默认 `--page-size 50`），否则按 `page-num/page-size` 取单页。
+  - 参数：`--company-id --page-num --page-size --all --json`
+- `attachment upload --company-id <id> --file <path>`
+  - 上传本地文件到客户范围 OSS，自动完成 OSS presign → PUT → `/enclosure/save` 三步。
+  - 参数：`--company-id --file --json`
+- `attachment download --company-id <id> [--file-id <id> | --all]`
+  - 下载单个附件或全部附件。省略 `--file-id` 且未指定 `--all` 时默认走 `--all`。同名标题自动附加 `_<id>` 后缀避免覆盖。
+  - 参数：`--company-id --file-id --all --output-dir (-O) --page-size --json`
+- `attachment batch --company-id <id> --zip-output <path>`
+  - 把所有附件打包成单个 zip；0 条成功时删除空 zip 并以非零退出。
+  - 参数：`--company-id --page-size --zip-output --json`
+
 ### `mes oss`
 
 - `oss upload image <file-path>`
@@ -462,3 +481,6 @@
 - 用户给 URL（plan/request）时，优先 `--from-url`，避免手工错填 `type/rid`。
 - `statistics add` 若无交互必须带齐：`--start --end --hours --remark` + 关联参数。
 - 周报 create/update 正文三选一：`--md` / `--md-file` / `--html`（避免同时给）。
+- `customer attachment` 子命令必须显式传入 `--company-id`；不要尝试从 `/user/detail` 推断或省略该 flag。
+- `customer attachment upload` 自动完成 OSS + `/enclosure/save` 三步；上传后无需手工注册。
+- `customer attachment download --all` / `batch` 在 0 条成功时退出码非零；解析 `--json` 输出的 `errors[]` 字段查看失败行。

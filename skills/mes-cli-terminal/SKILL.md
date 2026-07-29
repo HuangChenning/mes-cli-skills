@@ -19,6 +19,7 @@ description: Convert Chinese or natural-language MES requests into precise mes-c
 - 报工质量、报工评分、质量评分
 - 服务请求（工单）创建、回复（含附件）、恢复、编辑、报工、下载附件（命令：`mes sr ...`）
 - 实施计划查询/创建/编辑/结束/删除
+- 客户附件查看/上传/下载/打包下载（命令：`mes customer attachment ...`，`--company-id` 必填）
 - MES文章或合同查询与维护
 - MES管理看板（dashboard）查询、周报增删改查
 - MES OSS 文件上传（支持图片及任意文件类型，回复附件也通过 OSS 上传）
@@ -51,7 +52,7 @@ AI agent 在执行命令前，**应主动提示用户检查 skill 是否有新�
 ## Command-generation workflow
 
 1. **识别意图域**
-   - `auth | statistics | sr | plan | article | contract | dashboard | util`
+   - `auth | statistics | sr | plan | article | contract | customer | dashboard | util`
 2. **抽取参数槽位**
    - 时间槽：`from/to` 或 `range`，以及 `start/end`
    - 对象槽：`id/rid/acc-id/company-id/executor-id/team-id`
@@ -92,6 +93,14 @@ AI agent 在执行命令前，**应主动提示用户检查 skill 是否有新�
   - 实施计划 ID：`mes plan list --company-id <id> -o json`（取 `externalId` 字段）
   - Profile 列表：`mes auth profile list`
 
+## Customer attachment 安全规则
+
+`mes customer attachment` 子命令族**必须显式传入 `--company-id`**：
+
+- 不会从 `/user/detail.companyId` 自动推断 — CLI 设计上拒绝“用当前账号所属公司”批量拉取。
+- 收到“客户附件”相关请求时，必须先用 `mes util search-company <keyword>` 拿到 ID，再传给 `mes customer attachment ...`。
+- 子命令：`list` / `upload` / `download` / `batch`（原 `view` 已移除，`list --all` 覆盖预览场景）。
+
 ## Safety classification
 
 **只读查询（可直接执行）**
@@ -102,6 +111,7 @@ AI agent 在执行命令前，**应主动提示用户检查 skill 是否有新�
 - `plan list|view`
 - `article list|view|review-count`
 - `contract list|view`
+- `customer attachment list`（仍需 `--company-id`，属于只读）
 - `dashboard ...` 所有查询
 - `util parse-support-url|search-user|search-company|list-teams [--type ads|delivery|duty|review]|list-members|list-assets`
 - `auth profile list`
@@ -113,6 +123,7 @@ AI agent 在执行命令前，**应主动提示用户检查 skill 是否有新�
 - `plan create|save|edit|end|delete`
 - `article save|delete|assign-reviewer|set-level|set-type`
 - `dashboard weeklyReport create|update|delete`
+- `customer attachment upload|download|batch`（每个都要求 `--company-id`；download/batch 是只读但涉及外部资源下载，归类为写操作的预览/确认同样适用）
 - `oss upload image`
 
 ## Reference Documents
